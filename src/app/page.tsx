@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
 
 type Track = {
   src: string;
@@ -10,7 +11,7 @@ type Track = {
 
 const playlist: Track[] = [
   { src: "/tiregrito.mp3", img: "/tiregrito.jpg", name: "Ponta Firme - Tiregrito" },
-  { src: "/fire.mp3", img: "/edinaldo.jpg", name: "Edinaldo (O grande) Pereira" },
+  { src: "/fire.mp3", img: "/edinaldo.jpg", name: "Edinaldo (O Grande) Pereira" },
   { src: "/ameaca.mp3", img: "/picapau.jpg", name: "Des - Mantelo" },
 ];
 
@@ -21,9 +22,18 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
-  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(0.5);
 
   const track = playlist[currentIndex];
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = 0.5;
+      setVolume(0.5);
+      setIsPlaying(false);
+    }
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -96,11 +106,11 @@ export default function Home() {
     }
   };
 
-  const toggleMute = () => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.muted = !audio.muted;
-      setMuted(audio.muted);
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
     }
   };
 
@@ -118,11 +128,11 @@ export default function Home() {
           <img
             src={track.img}
             alt={track.name}
-            className="w-72 h-72 md:w-60 md:h-60 mx-auto rounded-lg shadow-lg opacity-70"
+            className="w-72 h-72 md:w-60 md:h-60 mx-auto rounded-lg shadow-lg opacity-80"
           />
         </figure>
 
-        <h2 className="text-lg font-semibold">{track.name}</h2>
+        <h2 className="text-lg font-semibold text-center">{track.name}</h2>
 
         <input
           type="range"
@@ -139,17 +149,35 @@ export default function Home() {
         </div>
 
         <div className="flex justify-around items-center mt-2">
-          <button onClick={handlePrev} className="text-2xl hover:scale-125">⏮</button>
+          <button onClick={handlePrev} className="hover:scale-125 transition-transform">
+            <SkipBack size={28} />
+          </button>
+
           <button
             onClick={togglePlay}
-            className="bg-red-600 rounded-full w-12 h-12 flex items-center justify-center text-2xl hover:scale-110"
+            className="bg-red-600 rounded-full w-12 h-12 flex items-center justify-center hover:scale-110 transition-transform"
           >
-            {isPlaying ? "⏸" : "▶"}
+            {isPlaying ? <Pause size={28} /> : <Play size={28} />}
           </button>
-          <button onClick={handleNext} className="text-2xl hover:scale-125">⏭</button>
-          <button onClick={toggleMute} className="text-2xl hover:scale-110">
-            {muted ? "🔇" : "🔊"}
+
+          <button onClick={handleNext} className="hover:scale-125 transition-transform">
+            <SkipForward size={28} />
           </button>
+
+        </div>
+
+        <div className="flex items-center gap-3 mt-4">
+          <Volume2 size={20} />
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={handleVolumeChange}
+            className="flex-1 accent-red-500"
+          />
+          <span className="text-sm text-gray-300">{(volume * 100).toFixed(0)}%</span>
         </div>
 
         <audio ref={audioRef}>
