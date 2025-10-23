@@ -23,6 +23,7 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
   const [volume, setVolume] = useState(0.5);
+  const [isMuted, setIsMuted] = useState(false);
 
   const track = playlist[currentIndex];
 
@@ -111,6 +112,15 @@ export default function Home() {
     setVolume(newVolume);
     if (audioRef.current) {
       audioRef.current.volume = newVolume;
+      if (newVolume > 0 && isMuted) setIsMuted(false);
+    }
+  };
+
+  const toggleMute = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = !isMuted;
+      setIsMuted(!isMuted);
     }
   };
 
@@ -163,21 +173,25 @@ export default function Home() {
           <button onClick={handleNext} className="hover:scale-125 transition-transform">
             <SkipForward size={28} />
           </button>
-
         </div>
 
         <div className="flex items-center gap-3 mt-4">
-          <Volume2 size={20} />
+          <button onClick={toggleMute} className="hover:scale-110 transition-transform">
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
           <input
             type="range"
             min="0"
             max="1"
             step="0.01"
-            value={volume}
+            value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
             className="flex-1 accent-red-500"
+            disabled={isMuted}
           />
-          <span className="text-sm text-gray-300">{(volume * 100).toFixed(0)}%</span>
+          <span className="text-sm text-gray-300">
+            {isMuted ? "Mudo" : `${(volume * 100).toFixed(0)}%`}
+          </span>
         </div>
 
         <audio ref={audioRef}>
