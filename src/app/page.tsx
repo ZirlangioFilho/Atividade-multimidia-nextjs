@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  SkipBack,
+  SkipForward,
+  Rewind,
+  FastForward,
+} from "lucide-react";
 
 type Track = {
   src: string;
@@ -33,8 +42,11 @@ export default function Home() {
       audio.volume = 0.5;
       setVolume(0.5);
       setIsPlaying(false);
+
+      // Quando terminar a música, toca a próxima automaticamente
+      audio.onended = () => handleNext();
     }
-  }, []);
+  }, [currentIndex]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -124,21 +136,46 @@ export default function Home() {
     }
   };
 
+  const skipSeconds = (seconds: number) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = Math.min(
+        Math.max(audio.currentTime + seconds, 0),
+        audio.duration
+      );
+    }
+  };
+
   return (
     <main
-      className="min-h-screen flex items-center justify-center bg-[#212121] text-white"
+      className="min-h-screen flex gap-6 items-center justify-center bg-[#212121] text-white p-6"
       style={{
         backgroundImage: `linear-gradient(rgba(0,0,0,0.87), rgba(0,0,0,0.6)), url(${track.img})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
+      {/* 🎵 Lista de músicas */}
+      <ul className="mb-6 w-full max-w-sm bg-[#2c2c2c] rounded-xl overflow-hidden">
+        {playlist.map((item, i) => (
+          <li
+            key={i}
+            onClick={() => loadTrack(i)}
+            className={`cursor-pointer px-4 py-3 border-b border-gray-700 hover:bg-[#3a3a3a] transition-colors ${
+              i === currentIndex ? "bg-red-600 text-white" : ""
+            }`}
+          >
+            {item.name}
+          </li>
+        ))}
+      </ul>
+
       <section className="bg-[#2c2c2c] p-8 rounded-xl max-w-sm w-full flex flex-col gap-6 shadow-lg">
         <figure>
           <img
             src={track.img}
             alt={track.name}
-            className="w-72 h-72 md:w-60 md:h-60 mx-auto rounded-lg shadow-lg opacity-80"
+            className="w-72 h-72 mx-auto rounded-lg shadow-lg opacity-80"
           />
         </figure>
 
@@ -158,7 +195,12 @@ export default function Home() {
           <span>{duration}</span>
         </div>
 
+        {/* ⏪⏯️⏩ Controles */}
         <div className="flex justify-around items-center mt-2">
+          <button onClick={() => skipSeconds(-10)} className="hover:scale-110 transition-transform">
+            <Rewind size={24} />
+          </button>
+
           <button onClick={handlePrev} className="hover:scale-125 transition-transform">
             <SkipBack size={28} />
           </button>
@@ -173,8 +215,13 @@ export default function Home() {
           <button onClick={handleNext} className="hover:scale-125 transition-transform">
             <SkipForward size={28} />
           </button>
+
+          <button onClick={() => skipSeconds(10)} className="hover:scale-110 transition-transform">
+            <FastForward size={24} />
+          </button>
         </div>
 
+        {/* 🔊 Volume */}
         <div className="flex items-center gap-3 mt-4">
           <button onClick={toggleMute} className="hover:scale-110 transition-transform">
             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
